@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useBooking } from "@/lib/booking-context"
 import type { Passenger, AdultPassenger } from "@/lib/schemas"
-import { fromISODate, formatDateInput, toISODate, getAgeError } from "@/lib/utils"
+import { fromISODate, formatDateInput, toISODate, getAgeError, formatPhone } from "@/lib/utils"
 import { PassengerTypeIcon } from "@/components/shared/passenger-type-icon"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -149,7 +149,8 @@ export function PassengersTab() {
                             id={`phone-${passenger.id}`}
                             placeholder="(00) 00000-0000"
                             value={(passenger as AdultPassenger).phone}
-                            onChange={e => handleChange(passenger.id, "phone", e.target.value)}
+                            onChange={e => handleChange(passenger.id, "phone", formatPhone(e.target.value))}
+                            maxLength={15}
                           />
                         </div>
                       </>

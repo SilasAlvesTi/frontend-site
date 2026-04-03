@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useBooking } from "@/lib/booking-context"
 import { clientSchema, type Client } from "@/lib/schemas"
-import { formatDateInput, toISODate, fromISODate } from "@/lib/utils"
+import { formatDateInput, toISODate, fromISODate, formatCPF, formatPhone } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,6 +14,8 @@ import { User, Mail, Phone, Calendar, IdCard } from "lucide-react"
 export function ClientTab() {
   const { state, setClient, setCanProceed } = useBooking()
   const [dateDisplay, setDateDisplay] = useState(() => fromISODate(state.client.birthDate || ""))
+  const [cpfDisplay, setCpfDisplay] = useState(() => state.client.cpf || "")
+  const [phoneDisplay, setPhoneDisplay] = useState(() => state.client.phone || "")
   const [allTouched, setAllTouched] = useState(() => !!(state.client.name || state.client.cpf))
 
   const {
@@ -57,6 +59,18 @@ export function ClientTab() {
     } else {
       setValue("birthDate", "", { shouldValidate: allTouched || touchedFields.birthDate })
     }
+  }
+
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPF(e.target.value)
+    setCpfDisplay(formatted)
+    setValue("cpf", formatted, { shouldValidate: allTouched || !!touchedFields.cpf })
+  }
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value)
+    setPhoneDisplay(formatted)
+    setValue("phone", formatted, { shouldValidate: allTouched || !!touchedFields.phone })
   }
 
   const nameField = register("name")
@@ -104,8 +118,10 @@ export function ClientTab() {
               <Input
                 id="cpf"
                 placeholder="000.000.000-00"
-                {...cpfField}
+                value={cpfDisplay}
+                onChange={handleCPFChange}
                 onBlur={makeBlurHandler("cpf", cpfField.onBlur)}
+                maxLength={14}
                 className={shouldShowError("cpf") ? "border-destructive" : ""}
               />
               {shouldShowError("cpf") && (
@@ -156,8 +172,10 @@ export function ClientTab() {
               <Input
                 id="phone"
                 placeholder="(00) 00000-0000"
-                {...phoneField}
+                value={phoneDisplay}
+                onChange={handlePhoneChange}
                 onBlur={makeBlurHandler("phone", phoneField.onBlur)}
+                maxLength={15}
                 className={shouldShowError("phone") ? "border-destructive" : ""}
               />
               {shouldShowError("phone") && (
