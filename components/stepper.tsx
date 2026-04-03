@@ -31,7 +31,7 @@ export function Stepper({ currentStep, onStepClick }: StepperProps) {
             <div className="flex items-center">
               {/* Left Connector */}
               {index > 0 ? (
-                <div className="flex-1 h-0.5 sm:h-1 w-8 sm:w-12">
+                <div className="flex-1 min-w-[14px] max-w-[48px] h-0.5 sm:h-1">
                   <div
                     className={cn(
                       "h-full rounded-full transition-all duration-300",
@@ -40,7 +40,7 @@ export function Stepper({ currentStep, onStepClick }: StepperProps) {
                   />
                 </div>
               ) : (
-                <div className="w-8 sm:w-12 invisible" /> // 👈 espaçador
+                <div className="flex-1 min-w-[14px] max-w-[48px] invisible" /> // 👈 espaçador
               )}
 
               {/* Step Circle */}
@@ -63,7 +63,7 @@ export function Stepper({ currentStep, onStepClick }: StepperProps) {
 
               {/* Right Connector */}
               {index < steps.length - 1 ? (
-                <div className="flex-1 h-0.5 sm:h-1 w-8 sm:w-12">
+                <div className="flex-1 min-w-[14px] max-w-[48px] h-0.5 sm:h-1">
                   <div
                     className={cn(
                       "h-full rounded-full transition-all duration-300",
@@ -72,7 +72,7 @@ export function Stepper({ currentStep, onStepClick }: StepperProps) {
                   />
                 </div>
               ) : (
-                <div className="w-8 sm:w-12 invisible" /> // 👈 espaçador
+                <div className="flex-1 min-w-[14px] max-w-[48px] invisible" /> // 👈 espaçador
               )}
             </div>
 

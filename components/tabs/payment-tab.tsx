@@ -28,6 +28,11 @@ export function PaymentTab() {
   const [baggageOptions, setBaggageOptions] = useState<BaggageOption[]>([])
   const [extraServices, setExtraServices] = useState<ExtraService[]>([])
 
+  const qrCells = useMemo(
+    () => Array.from({ length: 64 }, () => Math.random() > 0.5),
+    []
+  )
+
   useEffect(() => {
     fetchBaggageOptions().then(setBaggageOptions)
     fetchExtraServices().then(setExtraServices)
@@ -227,8 +232,8 @@ export function PaymentTab() {
               <div className="bg-background border-4 border-primary rounded-xl p-3 sm:p-4">
                 <div className="w-36 h-36 sm:w-48 sm:h-48 bg-foreground rounded-lg flex items-center justify-center">
                   <div className="grid grid-cols-8 gap-0.5 p-1.5 sm:p-2">
-                    {Array.from({ length: 64 }).map((_, i) => (
-                      <div key={i} className={`w-3 h-3 sm:w-4 sm:h-4 ${Math.random() > 0.5 ? "bg-background" : "bg-foreground"}`} />
+                    {qrCells.map((isLight, i) => (
+                      <div key={i} className={`w-3 h-3 sm:w-4 sm:h-4 ${isLight ? "bg-background" : "bg-foreground"}`} />
                     ))}
                   </div>
                 </div>

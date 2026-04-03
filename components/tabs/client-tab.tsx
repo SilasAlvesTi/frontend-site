@@ -122,6 +122,7 @@ export function ClientTab() {
                 onChange={handleCPFChange}
                 onBlur={makeBlurHandler("cpf", cpfField.onBlur)}
                 maxLength={14}
+                inputMode="numeric"
                 className={shouldShowError("cpf") ? "border-destructive" : ""}
               />
               {shouldShowError("cpf") && (
@@ -176,6 +177,7 @@ export function ClientTab() {
                 onChange={handlePhoneChange}
                 onBlur={makeBlurHandler("phone", phoneField.onBlur)}
                 maxLength={15}
+                inputMode="tel"
                 className={shouldShowError("phone") ? "border-destructive" : ""}
               />
               {shouldShowError("phone") && (
@@ -195,6 +197,7 @@ export function ClientTab() {
                 onChange={handleDateChange}
                 onBlur={makeBlurHandler("birthDate", birthDateField.onBlur)}
                 maxLength={10}
+                inputMode="numeric"
                 className={shouldShowError("birthDate") ? "border-destructive" : ""}
               />
               {shouldShowError("birthDate") && (

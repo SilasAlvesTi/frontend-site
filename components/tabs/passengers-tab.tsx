@@ -116,6 +116,7 @@ export function PassengersTab() {
                         value={dateDisplays[passenger.id] || ""}
                         onChange={e => handleDateChange(passenger.id, e.target.value)}
                         maxLength={10}
+                        inputMode="numeric"
                         className={ageError ? "border-destructive" : ""}
                       />
                       {ageError && (
@@ -151,6 +152,7 @@ export function PassengersTab() {
                             value={(passenger as AdultPassenger).phone}
                             onChange={e => handleChange(passenger.id, "phone", formatPhone(e.target.value))}
                             maxLength={15}
+                            inputMode="tel"
                           />
                         </div>
                       </>

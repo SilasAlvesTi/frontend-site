@@ -88,7 +88,7 @@ function BookingContent() {
             className="gap-1.5 sm:gap-2 h-10 sm:h-11 text-sm sm:text-base px-3 sm:px-4"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span className="hidden xs:inline">Voltar</span>
+            <span>Voltar</span>
           </Button>
 
           {currentStep < 3 && (
