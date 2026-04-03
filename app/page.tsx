@@ -15,18 +15,21 @@ function BookingContent() {
   const handleNext = () => {
     if (currentStep < 3 && canProceed) {
       setCurrentStep(currentStep + 1)
+      window.scrollTo({ top: 0, behavior: "smooth" })
     }
   }
 
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
+      window.scrollTo({ top: 0, behavior: "smooth" })
     }
   }
 
   const handleStepClick = (step: number) => {
     if (step < currentStep) {
       setCurrentStep(step)
+      window.scrollTo({ top: 0, behavior: "smooth" })
     }
   }
 
