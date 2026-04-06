@@ -88,7 +88,7 @@ export interface ExtraService {
 
 export interface PassengerBaggage {
   passengerId: string
-  baggageOptionId: string | null
+  quantity: number
 }
 
 // Tipo para informações do voo

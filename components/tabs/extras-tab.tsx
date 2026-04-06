@@ -7,12 +7,14 @@ import type { BaggageOption, ExtraService } from "@/lib/schemas"
 import { formatCurrency } from "@/lib/utils"
 import { PassengerTypeIcon } from "@/components/shared/passenger-type-icon"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Luggage, Sparkles, Check, ChevronDown } from "lucide-react"
+import { Luggage, Sparkles, Check, ChevronDown, Minus, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
+
+const baggageCounterButtonClassName =
+  "h-8 w-8 rounded-full border-border bg-muted text-foreground shadow-none hover:bg-secondary hover:text-foreground active:ring-2 active:ring-ring/40 focus-visible:ring-2 focus-visible:ring-ring/40"
 
 export function ExtrasTab() {
   const { state, updatePassengerBaggage, toggleExtra, setCanProceed } = useBooking()
@@ -29,17 +31,26 @@ export function ExtrasTab() {
     fetchExtraServices().then(setExtraServices)
   }, [setCanProceed])
 
-  const getBaggageForPassenger = (passengerId: string) =>
-    state.passengerBaggage.find(b => b.passengerId === passengerId)?.baggageOptionId || "none"
+  const bag23Option = baggageOptions.find(option => option.id === "bag-23")
+
+  const getBaggageQuantity = (passengerId: string) => {
+    return state.passengerBaggage.find(b => b.passengerId === passengerId)?.quantity ?? 0
+  }
 
   const getSelectedBaggageLabel = (passengerId: string) => {
-    const option = baggageOptions.find(o => o.id === getBaggageForPassenger(passengerId))
-    if (!option || option.id === "none") return "Sem bagagem extra"
-    return `${option.name} - ${formatCurrency(option.price)}`
+    const quantity = getBaggageQuantity(passengerId)
+    if (!bag23Option || quantity === 0) return "Sem bagagem extra"
+    const label = quantity === 1 ? "1 volume" : `${quantity} volumes`
+    return `${label} de 23kg - ${formatCurrency(quantity * bag23Option.price)}`
   }
 
   const togglePassenger = (passengerId: string) => {
     setOpenPassengers(prev => ({ ...prev, [passengerId]: !prev[passengerId] }))
+  }
+
+  const changeBaggageQuantity = (passengerId: string, delta: number) => {
+    const currentQuantity = getBaggageQuantity(passengerId)
+    updatePassengerBaggage(passengerId, Math.max(0, currentQuantity + delta))
   }
 
   return (
@@ -92,35 +103,45 @@ export function ExtrasTab() {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="border-t border-border p-3 sm:p-4 bg-secondary/20">
-                      <RadioGroup
-                        value={getBaggageForPassenger(passenger.id)}
-                        onValueChange={value => updatePassengerBaggage(passenger.id, value === "none" ? null : value)}
-                        className="grid gap-2 sm:gap-3 sm:grid-cols-2"
-                      >
-                        {baggageOptions.map(option => (
-                          <div key={option.id}>
-                            <RadioGroupItem value={option.id} id={`${passenger.id}-${option.id}`} className="peer sr-only" />
-                            <Label
-                              htmlFor={`${passenger.id}-${option.id}`}
-                              className="flex cursor-pointer items-center justify-between rounded-lg border-2 border-border bg-background p-3 sm:p-4 hover:bg-secondary/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 transition-all"
-                            >
-                              <div className="flex items-center gap-2 sm:gap-3">
-                                <Luggage className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0" />
-                                <div>
-                                  <p className="font-medium text-sm sm:text-base text-foreground">{option.name}</p>
-                                  <p className="text-xs sm:text-sm text-muted-foreground">{option.weight}</p>
-                                </div>
-                              </div>
-                              <Badge
-                                variant={option.price === 0 ? "secondary" : "default"}
-                                className={`text-xs sm:text-sm shrink-0 ${option.price > 0 ? "bg-primary" : ""}`}
-                              >
-                                {option.price === 0 ? "Grátis" : formatCurrency(option.price)}
-                              </Badge>
-                            </Label>
+                      <div className="flex items-center justify-between rounded-lg border-2 border-border bg-background p-3 sm:p-4">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                          <Luggage className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm sm:text-base text-foreground">
+                              Bagagem 23kg
+                            </p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
+                              {bag23Option ? formatCurrency(bag23Option.price) : "--"} por volume
+                            </p>
                           </div>
-                        ))}
-                      </RadioGroup>
+                        </div>
+
+                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className={baggageCounterButtonClassName}
+                            onClick={() => changeBaggageQuantity(passenger.id, -1)}
+                            disabled={getBaggageQuantity(passenger.id) === 0}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <Badge variant="secondary" className="min-w-10 justify-center text-sm">
+                            {getBaggageQuantity(passenger.id)}
+                          </Badge>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className={baggageCounterButtonClassName}
+                            onClick={() => changeBaggageQuantity(passenger.id, 1)}
+                            disabled={!bag23Option}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </CollapsibleContent>
                 </div>

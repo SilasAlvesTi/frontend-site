@@ -46,10 +46,11 @@ export function PaymentTab() {
 
   const calculations = useMemo(() => {
     const ticketsTotal = state.flightInfo.basePrice * state.passengers.length
+    const bag23Option = baggageOptions.find(option => option.id === "bag-23")
 
     const baggageTotal = state.passengerBaggage.reduce((sum, pb) => {
-      if (!pb.baggageOptionId || pb.baggageOptionId === "none") return sum
-      return sum + (baggageOptions.find(o => o.id === pb.baggageOptionId)?.price ?? 0)
+      if (!bag23Option || pb.quantity <= 0) return sum
+      return sum + (pb.quantity * bag23Option.price)
     }, 0)
 
     const extrasTotal = state.selectedExtras.reduce((sum, extraId) => {
@@ -159,18 +160,18 @@ export function PaymentTab() {
                   Bagagens Extras
                 </h4>
                 {state.passengerBaggage
-                  .filter(pb => pb.baggageOptionId && pb.baggageOptionId !== "none")
+                  .filter(pb => pb.quantity > 0)
                   .map(pb => {
                     const passenger = state.passengers.find(p => p.id === pb.passengerId)
-                    const baggage = baggageOptions.find(o => o.id === pb.baggageOptionId)
+                    const baggage = baggageOptions.find(o => o.id === "bag-23")
                     if (!passenger || !baggage) return null
                     return (
                       <div key={pb.passengerId} className="flex items-center justify-between py-1.5 sm:py-2">
                         <span className="text-sm sm:text-base text-foreground truncate mr-2">
-                          {baggage.name} - {passenger.name || "Passageiro"}
+                          {pb.quantity}x {baggage.name} - {passenger.name || "Passageiro"}
                         </span>
                         <span className="font-medium text-sm sm:text-base text-foreground shrink-0">
-                          {formatCurrency(baggage.price)}
+                          {formatCurrency(pb.quantity * baggage.price)}
                         </span>
                       </div>
                     )

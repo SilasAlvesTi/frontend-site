@@ -17,7 +17,7 @@ interface BookingContextType {
   setPassengers: (passengers: Passenger[]) => void
   updatePassenger: (id: string, data: Partial<Passenger>) => void
   setPassengerBaggage: (baggage: PassengerBaggage[]) => void
-  updatePassengerBaggage: (passengerId: string, baggageOptionId: string | null) => void
+  updatePassengerBaggage: (passengerId: string, quantity: number) => void
   setSelectedExtras: (extras: string[]) => void
   toggleExtra: (extraId: string) => void
   currentStep: number
@@ -108,14 +108,22 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, passengerBaggage: baggage }))
   }, [])
 
-  const updatePassengerBaggage = useCallback((passengerId: string, baggageOptionId: string | null) => {
+  const updatePassengerBaggage = useCallback((passengerId: string, quantity: number) => {
     setState(prev => {
       const exists = prev.passengerBaggage.find(b => b.passengerId === passengerId)
+      const nextBaggage = quantity > 0
+        ? { passengerId, quantity }
+        : null
+
       return {
         ...prev,
         passengerBaggage: exists
-          ? prev.passengerBaggage.map(b => b.passengerId === passengerId ? { ...b, baggageOptionId } : b)
-          : [...prev.passengerBaggage, { passengerId, baggageOptionId }],
+          ? nextBaggage
+            ? prev.passengerBaggage.map(b => b.passengerId === passengerId ? nextBaggage : b)
+            : prev.passengerBaggage.filter(b => b.passengerId !== passengerId)
+          : nextBaggage
+            ? [...prev.passengerBaggage, nextBaggage]
+            : prev.passengerBaggage,
       }
     })
   }, [])
