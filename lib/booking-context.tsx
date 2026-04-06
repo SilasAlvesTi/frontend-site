@@ -8,7 +8,6 @@ import type {
   FlightInfo,
   PassengerCount,
   BookingState,
-  AdultPassenger,
 } from "./schemas"
 import { fetchFlightInfo, fetchPassengerCount } from "./api"
 
@@ -32,8 +31,8 @@ function generateId() {
 }
 
 function createEmptyPassenger(type: "adulto" | "crianca" | "bebe"): Passenger {
-  const base = { id: generateId(), name: "", birthDate: "" }
-  if (type === "adulto") return { ...base, type: "adulto", rg: "", phone: "" } as AdultPassenger
+  const base = { id: generateId(), name: "", birthDate: "", rg: "" }
+  if (type === "adulto") return { ...base, type: "adulto", phone: "" } as Passenger
   return { ...base, type } as Passenger
 }
 

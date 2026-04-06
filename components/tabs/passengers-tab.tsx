@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useBooking } from "@/lib/booking-context"
-import type { Passenger, AdultPassenger } from "@/lib/schemas"
+import type { Passenger } from "@/lib/schemas"
 import { fromISODate, formatDateInput, toISODate, getAgeError, formatPhone } from "@/lib/utils"
 import { PassengerTypeIcon } from "@/components/shared/passenger-type-icon"
 import { Input } from "@/components/ui/input"
@@ -34,11 +34,8 @@ export function PassengersTab() {
 
   const allPassengersValid = useMemo(() => {
     return state.passengers.length > 0 && state.passengers.every(p => {
-      if (!p.name || !p.birthDate) return false
-      if (p.type === "adulto") {
-        const a = p as AdultPassenger
-        if (!a.rg || !a.phone) return false
-      }
+      if (!p.name || !p.birthDate || !p.rg) return false
+      if (p.type === "adulto" && !p.phone) return false
       return !getAgeError(p.birthDate, p.type)
     })
   }, [state.passengers])
@@ -127,35 +124,34 @@ export function PassengersTab() {
                       )}
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor={`rg-${passenger.id}`} className="flex items-center gap-2 text-foreground">
+                        <IdCard className="h-4 w-4 text-primary" />
+                        RG
+                      </Label>
+                      <Input
+                        id={`rg-${passenger.id}`}
+                        placeholder="Digite o RG"
+                        value={passenger.rg}
+                        onChange={e => handleChange(passenger.id, "rg", e.target.value)}
+                      />
+                    </div>
+
                     {passenger.type === "adulto" && (
-                      <>
-                        <div className="space-y-2">
-                          <Label htmlFor={`rg-${passenger.id}`} className="flex items-center gap-2 text-foreground">
-                            <IdCard className="h-4 w-4 text-primary" />
-                            RG
-                          </Label>
-                          <Input
-                            id={`rg-${passenger.id}`}
-                            placeholder="Digite o RG"
-                            value={(passenger as AdultPassenger).rg}
-                            onChange={e => handleChange(passenger.id, "rg", e.target.value)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor={`phone-${passenger.id}`} className="flex items-center gap-2 text-foreground">
-                            <Phone className="h-4 w-4 text-primary" />
-                            Telefone
-                          </Label>
-                          <Input
-                            id={`phone-${passenger.id}`}
-                            placeholder="(00) 00000-0000"
-                            value={(passenger as AdultPassenger).phone}
-                            onChange={e => handleChange(passenger.id, "phone", formatPhone(e.target.value))}
-                            maxLength={15}
-                            inputMode="tel"
-                          />
-                        </div>
-                      </>
+                      <div className="space-y-2">
+                        <Label htmlFor={`phone-${passenger.id}`} className="flex items-center gap-2 text-foreground">
+                          <Phone className="h-4 w-4 text-primary" />
+                          Telefone
+                        </Label>
+                        <Input
+                          id={`phone-${passenger.id}`}
+                          placeholder="(00) 00000-0000"
+                          value={passenger.phone}
+                          onChange={e => handleChange(passenger.id, "phone", formatPhone(e.target.value))}
+                          maxLength={15}
+                          inputMode="tel"
+                        />
+                      </div>
                     )}
                   </div>
                 </CardContent>

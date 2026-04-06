@@ -28,42 +28,33 @@ export const clientSchema = z.object({
 })
 
 // Schema do Passageiro Adulto
-export const adultPassengerSchema = z.object({
+const basePassengerSchema = z.object({
   id: z.string(),
-  type: z.literal("adulto"),
   name: z.string()
     .min(3, "Nome deve ter pelo menos 3 caracteres")
     .max(100, "Nome muito longo"),
   rg: z.string()
     .min(5, "RG inválido")
     .max(20, "RG inválido"),
+  birthDate: z.string()
+    .min(1, "Data de nascimento é obrigatória")
+})
+
+export const adultPassengerSchema = basePassengerSchema.extend({
+  type: z.literal("adulto"),
   phone: z.string()
     .min(1, "Telefone é obrigatório")
     .regex(phoneRegex, "Telefone inválido"),
-  birthDate: z.string()
-    .min(1, "Data de nascimento é obrigatória")
 })
 
 // Schema do Passageiro Criança
-export const childPassengerSchema = z.object({
-  id: z.string(),
+export const childPassengerSchema = basePassengerSchema.extend({
   type: z.literal("crianca"),
-  name: z.string()
-    .min(3, "Nome deve ter pelo menos 3 caracteres")
-    .max(100, "Nome muito longo"),
-  birthDate: z.string()
-    .min(1, "Data de nascimento é obrigatória")
 })
 
 // Schema do Passageiro Bebê
-export const babyPassengerSchema = z.object({
-  id: z.string(),
+export const babyPassengerSchema = basePassengerSchema.extend({
   type: z.literal("bebe"),
-  name: z.string()
-    .min(3, "Nome deve ter pelo menos 3 caracteres")
-    .max(100, "Nome muito longo"),
-  birthDate: z.string()
-    .min(1, "Data de nascimento é obrigatória")
 })
 
 // Schema unificado de passageiro

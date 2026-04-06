@@ -15,9 +15,9 @@ const mockFlightInfo: FlightInfo = {
 }
 
 const mockPassengerCount: PassengerCount = {
-  adults: 2,
+  adults: 1,
   children: 1,
-  babies: 0,
+  babies: 1,
 }
 
 const mockBaggageOptions: BaggageOption[] = [
