@@ -14,6 +14,7 @@ import { fetchFlightInfo, fetchPassengerCount } from "./api"
 interface BookingContextType {
   state: BookingState
   setClient: (client: Partial<Client>) => void
+  updateFlightInfo: (flightInfo: Partial<FlightInfo>) => void
   setPassengers: (passengers: Passenger[]) => void
   updatePassenger: (id: string, data: Partial<Passenger>) => void
   setPassengerBaggage: (baggage: PassengerBaggage[]) => void
@@ -24,7 +25,11 @@ interface BookingContextType {
   setCurrentStep: (step: number) => void
   canProceed: boolean
   setCanProceed: (can: boolean) => void
+  reservationTimeLeft: number
+  reservationExpired: boolean
 }
+
+const RESERVATION_DURATION_SECONDS = 15 * 60
 
 function generateId() {
   return Math.random().toString(36).substring(2, 9)
@@ -54,6 +59,7 @@ const placeholderFlightInfo: FlightInfo = {
   flightNumber: "",
   airline: "",
   basePrice: 0,
+  fareBrandId: "",
 }
 
 const placeholderPassengerCount: PassengerCount = {
@@ -77,6 +83,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<BookingState>(defaultState)
   const [currentStep, setCurrentStep] = useState(0)
   const [canProceed, setCanProceed] = useState(false)
+  const [reservationTimeLeft, setReservationTimeLeft] = useState(RESERVATION_DURATION_SECONDS)
 
   useEffect(() => {
     Promise.all([fetchFlightInfo(), fetchPassengerCount()]).then(([flightInfo, passengerCount]) => {
@@ -89,8 +96,27 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setReservationTimeLeft(prev => {
+        if (prev <= 1) {
+          window.clearInterval(intervalId)
+          return 0
+        }
+
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
+
   const setClient = useCallback((client: Partial<Client>) => {
     setState(prev => ({ ...prev, client: { ...prev.client, ...client } }))
+  }, [])
+
+  const updateFlightInfo = useCallback((flightInfo: Partial<FlightInfo>) => {
+    setState(prev => ({ ...prev, flightInfo: { ...prev.flightInfo, ...flightInfo } }))
   }, [])
 
   const setPassengers = useCallback((passengers: Passenger[]) => {
@@ -145,6 +171,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     <BookingContext.Provider value={{
       state,
       setClient,
+      updateFlightInfo,
       setPassengers,
       updatePassenger,
       setPassengerBaggage,
@@ -155,6 +182,8 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       setCurrentStep,
       canProceed,
       setCanProceed,
+      reservationTimeLeft,
+      reservationExpired: reservationTimeLeft === 0,
     }}>
       {children}
     </BookingContext.Provider>

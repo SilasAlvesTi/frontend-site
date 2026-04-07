@@ -20,7 +20,7 @@ function PassengerTypeBadge({ type }: { type: string }) {
   const colors: Record<string, string> = {
     adulto: "bg-primary text-primary-foreground",
     crianca: "bg-success text-success-foreground",
-    bebe: "bg-chart-4 text-foreground",
+    bebe: "bg-secondary text-secondary-foreground",
   }
   return <Badge className={colors[type]}>{labels[type]}</Badge>
 }

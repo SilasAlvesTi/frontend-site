@@ -2,24 +2,24 @@
 
 import { useEffect, useState } from "react"
 import { useBooking } from "@/lib/booking-context"
-import { fetchBaggageOptions, fetchExtraServices } from "@/lib/api"
-import type { BaggageOption, ExtraService } from "@/lib/schemas"
+import { fetchBaggageOptions, fetchFareBrands } from "@/lib/api"
+import type { BaggageOption, FareBrand } from "@/lib/schemas"
 import { formatCurrency } from "@/lib/utils"
 import { PassengerTypeIcon } from "@/components/shared/passenger-type-icon"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Luggage, Sparkles, Check, ChevronDown, Minus, Plus } from "lucide-react"
+import { Luggage, Sparkles, Check, ChevronDown, Minus, Plus, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const baggageCounterButtonClassName =
   "h-8 w-8 rounded-full border-border bg-muted text-foreground shadow-none hover:bg-secondary hover:text-foreground active:ring-2 active:ring-ring/40 focus-visible:ring-2 focus-visible:ring-ring/40"
 
 export function ExtrasTab() {
-  const { state, updatePassengerBaggage, toggleExtra, setCanProceed } = useBooking()
+  const { state, updatePassengerBaggage, updateFlightInfo, setCanProceed } = useBooking()
   const [baggageOptions, setBaggageOptions] = useState<BaggageOption[]>([])
-  const [extraServices, setExtraServices] = useState<ExtraService[]>([])
+  const [fareBrands, setFareBrands] = useState<FareBrand[]>([])
 
   const [openPassengers, setOpenPassengers] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(state.passengers.map(p => [p.id, false]))
@@ -28,7 +28,7 @@ export function ExtrasTab() {
   useEffect(() => {
     setCanProceed(true)
     fetchBaggageOptions().then(setBaggageOptions)
-    fetchExtraServices().then(setExtraServices)
+    fetchFareBrands().then(setFareBrands)
   }, [setCanProceed])
 
   const bag23Option = baggageOptions.find(option => option.id === "bag-23")
@@ -51,6 +51,20 @@ export function ExtrasTab() {
   const changeBaggageQuantity = (passengerId: string, delta: number) => {
     const currentQuantity = getBaggageQuantity(passengerId)
     updatePassengerBaggage(passengerId, Math.max(0, currentQuantity + delta))
+  }
+
+  const availableFareBrands = fareBrands.filter(fareBrand => fareBrand.airline === state.flightInfo.airline)
+  const selectedFareBrand = availableFareBrands.find(fareBrand => fareBrand.id === state.flightInfo.fareBrandId)
+  const cheapestFareBrand = availableFareBrands.reduce<FareBrand | null>(
+    (lowest, fareBrand) => !lowest || fareBrand.price < lowest.price ? fareBrand : lowest,
+    null
+  )
+
+  const handleFareBrandSelect = (fareBrand: FareBrand) => {
+    updateFlightInfo({
+      fareBrandId: fareBrand.id,
+      basePrice: fareBrand.price,
+    })
   }
 
   return (
@@ -159,48 +173,112 @@ export function ExtrasTab() {
             </div>
             <div>
               <CardTitle className="text-lg sm:text-2xl font-bold text-foreground">
-                Serviços Adicionais
+                Tipo de Passagem
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm text-muted-foreground">
-                Personalize sua experiência de viagem
+                Benefícios incluídos na tarifa escolhida para este voo
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="px-4 sm:px-6">
-          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
-            {extraServices.map(service => {
-              const isSelected = state.selectedExtras.includes(service.id)
+          <div className="grid gap-3 sm:gap-4">
+            {availableFareBrands.map(fareBrand => {
+              const isSelected = fareBrand.id === state.flightInfo.fareBrandId
               return (
                 <div
-                  key={service.id}
-                  onClick={() => toggleExtra(service.id)}
+                  key={fareBrand.id}
+                  onClick={() => handleFareBrandSelect(fareBrand)}
                   className={cn(
-                    "flex cursor-pointer items-start gap-3 sm:gap-4 rounded-lg border-2 p-3 sm:p-4 transition-all",
-                    isSelected ? "border-primary bg-primary/5" : "border-border bg-background hover:bg-secondary/50"
+                    "rounded-xl border-2 p-4 sm:p-5 transition-all cursor-pointer",
+                    isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-background hover:border-primary/40 hover:bg-secondary/30"
                   )}
                 >
-                  <div className={cn(
-                    "flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded border-2 transition-all shrink-0 mt-0.5",
-                    isSelected ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/30"
-                  )}>
-                    {isSelected && <Check className="h-3 w-3 sm:h-4 sm:w-4" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="font-medium text-sm sm:text-base text-foreground">{service.name}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{service.description}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-base sm:text-lg text-foreground">{fareBrand.name}</p>
+                          <Badge
+                            variant={isSelected ? "default" : "secondary"}
+                            className={isSelected ? "bg-primary text-primary-foreground" : ""}
+                          >
+                            {isSelected ? "Escolhida" : fareBrand.code}
+                          </Badge>
+                          {cheapestFareBrand?.id === fareBrand.id && (
+                            <Badge variant="secondary">Mais barata</Badge>
+                          )}
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {fareBrand.airline} • {fareBrand.description}
+                        </p>
                       </div>
-                      <Badge className="bg-primary shrink-0 text-xs sm:text-sm">
-                        {formatCurrency(service.price)}
-                      </Badge>
+                      <div className="text-right shrink-0">
+                        <p className="text-base sm:text-lg font-semibold text-foreground">
+                          {formatCurrency(fareBrand.price)}
+                        </p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          por passageiro
+                        </p>
+                        {cheapestFareBrand && fareBrand.price > cheapestFareBrand.price && (
+                          <p className="text-xs sm:text-sm text-muted-foreground">
+                            +{formatCurrency(fareBrand.price - cheapestFareBrand.price)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-2.5">
+                      {fareBrand.benefits.map(benefit => (
+                        <div
+                          key={benefit.id}
+                          className={cn(
+                            "flex items-start gap-3 rounded-lg border px-3 py-3",
+                            benefit.included ? "border-primary/20 bg-primary/5" : "border-border bg-secondary/20"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "mt-0.5 flex h-5 w-5 items-center justify-center rounded-full shrink-0",
+                              benefit.included ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                            )}
+                          >
+                            {benefit.included ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm sm:text-base font-medium text-foreground">{benefit.label}</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">{benefit.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-background/70 px-3 py-2">
+                      <span className="text-sm text-muted-foreground">
+                        {isSelected ? "Tarifa selecionada para esta reserva" : "Clique para escolher esta tarifa"}
+                      </span>
+                      <div className={cn(
+                        "flex h-7 w-7 items-center justify-center rounded-full shrink-0 transition-colors",
+                        isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                      )}>
+                        <Check className="h-4 w-4" />
+                      </div>
                     </div>
                   </div>
                 </div>
               )
             })}
           </div>
+          {availableFareBrands.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Nenhuma tarifa detalhada foi encontrada para a companhia deste voo.
+            </p>
+          )}
+          {selectedFareBrand && (
+            <p className="mt-4 text-xs sm:text-sm text-muted-foreground">
+              Tarifa identificada para esta reserva: <span className="font-medium text-foreground">{selectedFareBrand.name}</span>.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -7,10 +7,24 @@ import { PassengersTab } from "@/components/tabs/passengers-tab"
 import { ExtrasTab } from "@/components/tabs/extras-tab"
 import { PaymentTab } from "@/components/tabs/payment-tab"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ArrowRight, Plane } from "lucide-react"
+import { ArrowLeft, ArrowRight, Clock3, Plane } from "lucide-react"
+import { cn } from "@/lib/utils"
+
+function formatReservationTime(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0")
+  const seconds = (totalSeconds % 60).toString().padStart(2, "0")
+  return `${minutes}:${seconds}`
+}
 
 function BookingContent() {
-  const { currentStep, setCurrentStep, canProceed, state } = useBooking()
+  const {
+    currentStep,
+    setCurrentStep,
+    canProceed,
+    state,
+    reservationTimeLeft,
+    reservationExpired,
+  } = useBooking()
 
   const handleNext = () => {
     if (currentStep < 3 && canProceed) {
@@ -75,6 +89,51 @@ function BookingContent() {
       <div className="bg-background border-b border-border">
         <div className="max-w-3xl mx-auto">
           <Stepper currentStep={currentStep} onStepClick={handleStepClick} />
+        </div>
+      </div>
+
+      <div className="border-b border-border bg-background/90">
+        <div className="max-w-3xl mx-auto px-3 sm:px-4 py-3">
+          <div
+            className={cn(
+              "flex items-center justify-between gap-3 rounded-xl border px-4 py-3",
+              reservationExpired && "border-destructive/30 bg-destructive/10",
+              !reservationExpired && reservationTimeLeft <= 300 && "border-amber-500/30 bg-amber-500/10",
+              !reservationExpired && reservationTimeLeft > 300 && "border-primary/20 bg-primary/5"
+            )}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                  reservationExpired && "bg-destructive text-white",
+                  !reservationExpired && reservationTimeLeft <= 300 && "bg-amber-500 text-white",
+                  !reservationExpired && reservationTimeLeft > 300 && "bg-primary text-primary-foreground"
+                )}
+              >
+                <Clock3 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-medium text-sm sm:text-base text-foreground">
+                  {reservationExpired ? "Seu tempo para concluir a compra expirou" : "Tempo reservado para concluir a compra"}
+                </p>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  {reservationExpired ? "Atualize a reserva para continuar." : "Finalize o pagamento antes do contador zerar."}
+                </p>
+              </div>
+            </div>
+
+            <div
+              className={cn(
+                "shrink-0 rounded-lg px-3 py-2 text-base sm:text-lg font-semibold tabular-nums",
+                reservationExpired && "bg-destructive text-white",
+                !reservationExpired && reservationTimeLeft <= 300 && "bg-amber-500 text-white",
+                !reservationExpired && reservationTimeLeft > 300 && "bg-background text-foreground border border-border"
+              )}
+            >
+              {formatReservationTime(reservationTimeLeft)}
+            </div>
+          </div>
         </div>
       </div>
 

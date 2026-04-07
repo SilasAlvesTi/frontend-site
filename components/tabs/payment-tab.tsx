@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useRef, useEffect } from "react"
 import { useBooking } from "@/lib/booking-context"
-import { fetchBaggageOptions, fetchExtraServices } from "@/lib/api"
-import type { BaggageOption, ExtraService } from "@/lib/schemas"
+import { fetchBaggageOptions, fetchFareBrands } from "@/lib/api"
+import type { BaggageOption, FareBrand } from "@/lib/schemas"
 import { formatCurrency } from "@/lib/utils"
 import { PassengerTypeIcon } from "@/components/shared/passenger-type-icon"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,7 +26,7 @@ export function PaymentTab() {
   const [showQrCode, setShowQrCode] = useState(false)
   const [copied, setCopied] = useState(false)
   const [baggageOptions, setBaggageOptions] = useState<BaggageOption[]>([])
-  const [extraServices, setExtraServices] = useState<ExtraService[]>([])
+  const [fareBrands, setFareBrands] = useState<FareBrand[]>([])
 
   const qrCells = useMemo(
     () => Array.from({ length: 64 }, () => Math.random() > 0.5),
@@ -35,7 +35,7 @@ export function PaymentTab() {
 
   useEffect(() => {
     fetchBaggageOptions().then(setBaggageOptions)
-    fetchExtraServices().then(setExtraServices)
+    fetchFareBrands().then(setFareBrands)
   }, [])
 
   const pixCode = useRef(
@@ -53,12 +53,14 @@ export function PaymentTab() {
       return sum + (pb.quantity * bag23Option.price)
     }, 0)
 
-    const extrasTotal = state.selectedExtras.reduce((sum, extraId) => {
-      return sum + (extraServices.find(s => s.id === extraId)?.price ?? 0)
-    }, 0)
+    const extrasTotal = 0
 
     return { ticketsTotal, baggageTotal, extrasTotal, total: ticketsTotal + baggageTotal + extrasTotal }
-  }, [state, baggageOptions, extraServices])
+  }, [state, baggageOptions])
+
+  const selectedFareBrand = fareBrands
+    .filter(fareBrand => fareBrand.airline === state.flightInfo.airline)
+    .find(fareBrand => fareBrand.id === state.flightInfo.fareBrandId)
 
   const handleCopyPix = async () => {
     await navigator.clipboard.writeText(pixCode)
@@ -132,6 +134,14 @@ export function PaymentTab() {
         <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6">
           <div>
             <h4 className="font-medium text-sm sm:text-base text-foreground mb-2">Passagens</h4>
+            {selectedFareBrand && (
+              <div className="flex items-center justify-between py-1.5 sm:py-2">
+                <span className="text-sm sm:text-base text-muted-foreground">
+                  Tarifa escolhida
+                </span>
+                <Badge variant="secondary">{selectedFareBrand.name}</Badge>
+              </div>
+            )}
             {state.passengers.map((passenger, index) => (
               <div key={passenger.id} className="flex items-center justify-between py-1.5 sm:py-2">
                 <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
@@ -181,25 +191,29 @@ export function PaymentTab() {
             </>
           )}
 
-          {state.selectedExtras.length > 0 && (
+          {selectedFareBrand && (
             <>
               <div>
                 <h4 className="font-medium text-sm sm:text-base text-foreground mb-2 flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-primary" />
-                  Serviços Adicionais
+                  Benefícios da Tarifa
                 </h4>
-                {state.selectedExtras.map(extraId => {
-                  const service = extraServices.find(s => s.id === extraId)
-                  if (!service) return null
-                  return (
-                    <div key={extraId} className="flex items-center justify-between py-1.5 sm:py-2">
-                      <span className="text-sm sm:text-base text-foreground">{service.name}</span>
-                      <span className="font-medium text-sm sm:text-base text-foreground shrink-0">
-                        {formatCurrency(service.price)}
+                <div className="flex items-center justify-between py-1.5 sm:py-2">
+                  <span className="text-sm sm:text-base text-foreground">
+                    {selectedFareBrand.name} - {selectedFareBrand.airline}
+                  </span>
+                  <Badge variant="secondary">{selectedFareBrand.code}</Badge>
+                </div>
+                {selectedFareBrand.benefits
+                  .filter(benefit => benefit.included)
+                  .map(benefit => (
+                    <div key={benefit.id} className="flex items-center justify-between py-1.5 sm:py-2">
+                      <span className="text-sm sm:text-base text-foreground">{benefit.label}</span>
+                      <span className="font-medium text-sm sm:text-base text-success shrink-0">
+                        Incluído
                       </span>
                     </div>
-                  )
-                })}
+                  ))}
               </div>
               <Separator />
             </>

@@ -86,6 +86,23 @@ export interface ExtraService {
   price: number
 }
 
+export interface FareBenefit {
+  id: string
+  label: string
+  description: string
+  included: boolean
+}
+
+export interface FareBrand {
+  id: string
+  airline: string
+  name: string
+  code: string
+  price: number
+  description: string
+  benefits: FareBenefit[]
+}
+
 export interface PassengerBaggage {
   passengerId: string
   quantity: number
@@ -102,6 +119,7 @@ export interface FlightInfo {
   flightNumber: string
   airline: string
   basePrice: number
+  fareBrandId: string
 }
 
 // Tipo para contagem de passageiros vinda do link
